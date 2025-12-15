@@ -1,0 +1,437 @@
+
+
+
+Add a comment...
+
+
+@ayeshstuff1788
+2 days ago
+i cant go invisible, im also using macspliot
+
+1
+
+
+Show more replies
+
+
+@datonefatboii6
+10 days ago
+haven't seen exploiting in a while, cool vid, keep it up!! :D
+
+
+
+
+@SINCERE-POLISHMENT1NCE
+12 days ago
+local player = game.Players.LocalPlayer
+local WALK_SPEED_THRESHOLD = 16
+
+local function onCharacterAdded(character)
+    local humanoid = character:WaitForChild("Humanoid")
+
+    -- Confirm rig is R15
+    if humanoid.RigType ~= Enum.HumanoidRigType.R15 then
+        return
+    end
+
+    local animator = humanoid:WaitForChild("Animator")
+
+    -- Stop currently playing animations
+    for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
+        track:Stop(0.1)
+    end
+
+    local animateScript = character:WaitForChild("Animate")
+    local idle = animateScript:WaitForChild("idle")
+    local walk = animateScript:WaitForChild("walk")
+    local run = animateScript:WaitForChild("run")
+
+    -- Optional sub-states
+    local jump = animateScript:FindFirstChild("jump")
+    local fall = animateScript:FindFirstChild("fall")
+    local climb = animateScript:FindFirstChild("climb")
+
+    -- Assign new animation IDs
+    idle.Animation1.AnimationId = "http://www.roblox.com/asset/?id=101094325978637"
+    idle.Animation2.AnimationId = "http://www.roblox.com/asset/?id=75794256017298"
+    walk.WalkAnim.AnimationId = "http://www.roblox.com/asset/?id=88508412373927"
+    run.RunAnim.AnimationId = "http://www.roblox.com/asset/?id=88508412373927"
+
+    -- Load walk animation
+    local walkAnim = Instance.new("Animation")
+    walkAnim.AnimationId = "rbxassetid://88508412373927"
+    local walkTrack = animator:LoadAnimation(walkAnim)
+    walkTrack.Priority = Enum.AnimationPriority.Movement
+
+    -- Helper to load and set priority for optional animations
+    local function loadAndSetAnimation(animContainer)
+        if animContainer and animContainer:FindFirstChildWhichIsA("StringValue") then
+            local anim = Instance.new("Animation")
+            anim.AnimationId = animContainer:FindFirstChildWhichIsA("StringValue").Value
+            local track = animator:LoadAnimation(anim)
+            track.Priority = Enum.AnimationPriority.Action
+            return track
+        end
+    end
+
+    local jumpTrack = loadAndSetAnimation(jump)
+    local fallTrack = loadAndSetAnimation(fall)
+    local climbTrack = loadAndSetAnimation(climb)
+
+    humanoid.Running:Connect(function(speed)
+        if speed > 0 and speed <= WALK_SPEED_THRESHOLD then
+            if not walkTrack.IsPlaying then
+                walkTrack:Play()
+            end
+        else
+            if walkTrack.IsPlaying then
+                walkTrack:Stop(0.1)
+            end
+        end
+    end)
+
+    humanoid.StateChanged:Connect(function(_, newState)
+        if newState == Enum.HumanoidStateType.Jumping
+            or newState == Enum.HumanoidStateType.Freefall
+            or newState == Enum.HumanoidStateType.Climbing then
+            if walkTrack.IsPlaying then
+                walkTrack:Stop(0.1)
+            end
+        end
+    end)
+end
+
+player.CharacterAdded:Connect(onCharacterAdded)
+
+if player.Character then
+    onCharacterAdded(player.Character)
+end
+--[[Invisibility Toggle
+
+You can find the orginal concept here: https://v3rmillion.net/showthread.php?tid=544634
+
+This method clones the character locally, teleports the real character to a safe location, then sets the character to the clone.
+Basically, your real character is in the sky while you are on the ground.
+
+
+Because of the way this works, games with a decent anti-cheat will fck this up.
+If you turn it off, you have to go to a safe place before going invisible.
+
+Written by: BitingTheDust ; https://v3rmillion.net/member.php?action=profile&uid=1628149
+]]
+--Settings:
+local ScriptStarted = false
+local Keybind = "x" --Set to whatever you want, has to be the name of a KeyCode Enum.
+local Transparency = true --Will make you slightly transparent when you are invisible. No reason to disable.
+local NoClip = false --Will make your fake character no clip.
+
+local Player = game:GetService("Players").LocalPlayer
+local RealCharacter = Player.Character or Player.CharacterAdded:Wait()
+
+local IsInvisible = false
+
+RealCharacter.Archivable = true
+local FakeCharacter = RealCharacter:Clone()
+local Part
+Part = Instance.new("Part", workspace)
+Part.Anchored = true
+Part.Size = Vector3.new(200, 1, 200)
+Part.CFrame = CFrame.new(0, -500, 0) --Set this to whatever you want, just far away from the map.
+Part.CanCollide = true
+FakeCharacter.Parent = workspace
+FakeCharacter.HumanoidRootPart.CFrame = Part.CFrame * CFrame.new(0, 5, 0)
+
+for i, v in pairs(RealCharacter:GetChildren()) do
+  if v:IsA("LocalScript") then
+      local clone = v:Clone()
+      clone.Disabled = true
+      clone.Parent = FakeCharacter
+  end
+end
+if Transparency then
+  for i, v in pairs(FakeCharacter:GetDescendants()) do
+      if v:IsA("BasePart") then
+          v.Transparency = 0.7
+      end
+  end
+end
+local CanInvis = true
+function RealCharacterDied()
+  CanInvis = false
+  RealCharacter:Destroy()
+  RealCharacter = Player.Character
+  CanInvis = true
+  isinvisible = false
+  FakeCharacter:Destroy()
+  workspace.CurrentCamera.CameraSubject = RealCharacter.Humanoid
+
+  RealCharacter.Archivable = true
+  FakeCharacter = RealCharacter:Clone()
+  Part:Destroy()
+  Part = Instance.new("Part", workspace)
+  Part.Anchored = true
+  Part.Size = Vector3.new(200, 1, 200)
+  Part.CFrame = CFrame.new(9999, 9999, 9999) --Set this to whatever you want, just far away from the map.
+  Part.CanCollide = true
+  FakeCharacter.Parent = workspace
+  FakeCharacter.HumanoidRootPart.CFrame = Part.CFrame * CFrame.new(0, 5, 0)
+
+  for i, v in pairs(RealCharacter:GetChildren()) do
+      if v:IsA("LocalScript") then
+          local clone = v:Clone()
+          clone.Disabled = true
+          clone.Parent = FakeCharacter
+      end
+  end
+  if Transparency then
+      for i, v in pairs(FakeCharacter:GetDescendants()) do
+          if v:IsA("BasePart") then
+              v.Transparency = 0.7
+          end
+      end
+  end
+ RealCharacter.Humanoid.Died:Connect(function()
+ RealCharacter:Destroy()
+ FakeCharacter:Destroy()
+ end)
+ Player.CharacterAppearanceLoaded:Connect(RealCharacterDied)
+end
+RealCharacter.Humanoid.Died:Connect(function()
+ RealCharacter:Destroy()
+ FakeCharacter:Destroy()
+ end)
+Player.CharacterAppearanceLoaded:Connect(RealCharacterDied)
+local PseudoAnchor
+game:GetService "RunService".RenderStepped:Connect(
+  function()
+      if PseudoAnchor ~= nil then
+          PseudoAnchor.CFrame = Part.CFrame * CFrame.new(0, 5, 0)
+      end
+       if NoClip then
+      FakeCharacter.Humanoid:ChangeState(11)
+       end
+  end
+)
+
+PseudoAnchor = FakeCharacter.HumanoidRootPart
+local function Invisible()
+  if IsInvisible == false then
+      local StoredCF = RealCharacter.HumanoidRootPart.CFrame
+      RealCharacter.HumanoidRootPart.CFrame = FakeCharacter.HumanoidRootPart.CFrame
+      FakeCharacter.HumanoidRootPart.CFrame = StoredCF
+      RealCharacter.Humanoid:UnequipTools()
+      Player.Character = FakeCharacter
+      workspace.CurrentCamera.CameraSubject = FakeCharacter.Humanoid
+      PseudoAnchor = RealCharacter.HumanoidRootPart
+      for i, v in pairs(FakeCharacter:GetChildren()) do
+          if v:IsA("LocalScript") then
+              v.Disabled = false
+          end
+      end
+
+      IsInvisible = true
+  else
+      local StoredCF = FakeCharacter.HumanoidRootPart.CFrame
+      FakeCharacter.HumanoidRootPart.CFrame = RealCharacter.HumanoidRootPart.CFrame
+     
+      RealCharacter.HumanoidRootPart.CFrame = StoredCF
+     
+      FakeCharacter.Humanoid:UnequipTools()
+      Player.Character = RealCharacter
+      workspace.CurrentCamera.CameraSubject = RealCharacter.Humanoid
+      PseudoAnchor = FakeCharacter.HumanoidRootPart
+      for i, v in pairs(FakeCharacter:GetChildren()) do
+          if v:IsA("LocalScript") then
+              v.Disabled = true
+          end
+      end
+      IsInvisible = false
+  end
+end
+
+game:GetService("UserInputService").InputBegan:Connect(
+  function(key, gamep)
+      if gamep then
+          return
+      end
+      if key.KeyCode.Name:lower() == Keybind:lower() and CanInvis and RealCharacter and FakeCharacter then
+          if RealCharacter:FindFirstChild("HumanoidRootPart") and FakeCharacter:FindFirstChild("HumanoidRootPart") then
+              Invisible()
+          end
+      end
+  end
+  )
+
+16
+21
+@SINCERE-POLISHMENT1NCE
+
+
+Show more replies
+
+
+@XKENZA777
+11 days ago
+can u just make a pastebin for ts cuz i cant copy it fully from the comments
+
+
+
+
+@towrift
+11 days ago
+Can you please tell me what your using, and also with you pasting me the exact thing i need to copy and paste into my execute, and also link me the game
+
+
+
+
+@PassoFome1234
+11 days ago
+Why did you get tired, bro?
+
+
+
+
+@totallynotbeta2
+11 days ago
+how do i get scripts on pc?
+
+
+
+
+@MetroSpid3er
+5 days ago
+Before i execute inf yeild I can go invis But when i do execute i cant go invis (using solora)
+
+8
+
+
+
+@SINCERE-POLISHMENT1NCE
+5 days ago
+Explain what your doing to me and I’ll see if I know what’s wrong
+
+7
+
+
+
+@MetroSpid3er
+5 days ago
+@SINCERE-POLISHMENT1NCE Im just joining the game executing the scipt then executing inf yeild and invis dont work after i execute inf
+
+6
+
+
+
+@SINCERE-POLISHMENT1NCE
+5 days ago
+@M@MetroSpid3erokay I only have one question, are you executing the invis script more then once? The invis script breaks after executing mkre then once.
+
+5
+
+
+
+@MetroSpid3er
+5 days ago
+@SINCERE-POLISHMENT1NCE The invis script? I just copy the entire thing, was i supposed to do that?
+
+4
+
+
+
+@SINCERE-POLISHMENT1NCE
+5 days ago
+@M@MetroSpid3erto put it simply your executing the whole script (The whole script are multiple scripts I put together into one script) in it is the invis script so by joining a game and executing it more then once the invis script breaks so you got to leave and do it again, I suggest inf yield executed first in one and then make another and paste the script and then execute that only once, if it doesn’t work maybe it’s the game your playing and it only works for r15 I think.
+
+
+Read more
+3
+
+
+
+@MetroSpid3er
+5 days ago
+@SINCERE-POLISHMENT1NCE Oh i got it working, I need your avatar and what sound do u use for the jumpscare ones
+
+
+
+@SINCERE-POLISHMENT1NCE
+5 days ago
+@MetroSpid3erokay cool, now I can’t do the avatar one rn but I use voicemod so I can use hot keys in its soundboard.
+
+
+
+@MetroSpid3er
+5 days ago
+@SINCERE-POLISHMENT1NCE Could u tell me the sounds?, i understand if not
+
+
+
+
+@M6cut
+12 days ago
+Is the script available to work on delta
+
+1
+
+
+Show more replies
+
+
+@Daaarcktnt
+11 days ago
+How do you have hacks on PC?
+
+1
+
+
+Show more replies
+
+
+@rr_8xx
+12 days ago
+What exacuter do you use?
+
+1
+
+
+Show more replies
+
+
+@M6cut
+11 days ago
+Is it all in one or separate
+
+1
+
+
+
+@SINCERE-POLISHMENT1NCE
+11 days ago
+For me I just put that whole script in the comments into my executor and it works fine
+
+1
+
+
+
+@DylanSouthern
+11 days ago
+how do you get an executor bro
+
+1
+2
+
+
+
+@DylanSouthern
+11 days ago
+nvm i found one, but what sound board do you use
+
+1
+
+
+
+@SINCERE-POLISHMENT1NCE
+5 days ago
+@D@DylanSouthernI use voicemod, it’s a voice changer but has a soundboard with hot keys and is kind of free
+
+
